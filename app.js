@@ -3,7 +3,7 @@
  * Core Logic & UI Rendering
  */
 
-// 1. Cache DOM Elements (Agar performa lebih cepat, tidak mencari elemen berulang kali)
+// Cache DOM Elements
 const DOM = {
     form: document.getElementById('searchForm'),
     input: document.getElementById('usernameInput'),
@@ -11,26 +11,22 @@ const DOM = {
     error: document.getElementById('errorMessage'),
     dashboard: document.getElementById('dashboardResult'),
     
-    // Profile Elements
     avatar: document.getElementById('userAvatar'),
     name: document.getElementById('userName'),
     login: document.getElementById('userLogin'),
     bio: document.getElementById('userBio'),
     link: document.getElementById('userLink'),
     
-    // Stats Elements
     statRepos: document.getElementById('statRepos'),
     statStars: document.getElementById('statStars'),
     statFollowers: document.getElementById('statFollowers'),
     statFollowing: document.getElementById('statFollowing'),
     
-    // List & Insight Elements
     languageList: document.getElementById('languageList'),
     repoList: document.getElementById('repoList'),
     insight: document.getElementById('developerInsight')
 };
 
-// 2. Main Event Listener
 DOM.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = DOM.input.value.trim();
@@ -54,7 +50,6 @@ DOM.form.addEventListener('submit', async (e) => {
     }
 });
 
-// 3. UI State Management
 function updateUIState(state) {
     DOM.loading.classList.add('hidden');
     DOM.error.classList.add('hidden');
@@ -66,7 +61,6 @@ function updateUIState(state) {
         DOM.dashboard.classList.add('opacity-0');
     } else if (state === 'success') {
         DOM.dashboard.classList.remove('hidden');
-        // Trigger reflow untuk animasi
         void DOM.dashboard.offsetWidth; 
         DOM.dashboard.classList.remove('opacity-0');
         DOM.dashboard.classList.add('animate-fade-in-up');
@@ -78,16 +72,14 @@ function showError(message) {
     DOM.error.classList.remove('hidden');
 }
 
-// 4. Core Renderer (Mendistribusikan data ke masing-masing komponen)
 function renderDashboard({ user, top_languages, total_stars, recent_repos }) {
     renderProfile(user);
     renderStats(user, total_stars);
     renderLanguages(top_languages);
-    renderRepos(recent_repos);
+    renderRepos(recent_repos, user?.login); 
     renderInsight(user, total_stars, top_languages);
 }
 
-// 5. Component Renderers
 function renderProfile(user) {
     DOM.avatar.src = user?.avatar_url ?? '';
     DOM.name.textContent = user?.name ?? user?.login;
@@ -123,7 +115,7 @@ function renderLanguages(languages = {}) {
                     <span class="text-nitenRed font-bold">${percentage}%</span>
                 </div>
                 <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
-                    <div class="bg-gradient-to-r from-nitenRedHover to-nitenRed h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%;" data-width="${percentage}%"></div>
+                    <div class="bg-gradient-to-r from-nitenRedHover to-nitenRed h-full rounded-full" style="width: ${percentage}%;"></div>
                 </div>
             </div>
         `;
@@ -131,7 +123,6 @@ function renderLanguages(languages = {}) {
 
     DOM.languageList.innerHTML = htmlString;
 
-    // Animasi progress bar meluncur
     setTimeout(() => {
         DOM.languageList.querySelectorAll('[data-width]').forEach(el => {
             el.style.width = el.getAttribute('data-width');
@@ -139,7 +130,7 @@ function renderLanguages(languages = {}) {
     }, 100);
 }
 
-function renderRepos(repos = []) {
+function renderRepos(repos = [], username = '') {
     DOM.repoList.innerHTML = '';
     
     if (repos.length === 0) {
@@ -152,8 +143,10 @@ function renderRepos(repos = []) {
             day: 'numeric', month: 'short', year: 'numeric'
         });
         
+        const repoUrl = username ? `https://github.com/${username}/${repo.name}` : 'https://github.com';
+        
         return `
-            <a href="https://github.com/${repo.full_name || ''}" target="_blank" class="block p-4 bg-white border border-gray-100 rounded-2xl flex flex-col justify-between hover:border-nitenRed/30 hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+            <a href="${repoUrl}" target="_blank" class="block p-4 bg-white border border-gray-100 rounded-2xl flex flex-col justify-between hover:border-nitenRed/30 hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
                 <div class="mb-3">
                     <h4 class="text-sm font-extrabold text-nitenDark group-hover:text-nitenRed transition-colors truncate" title="${repo.name}">${repo.name}</h4>
                     <span class="text-[10px] text-gray-400 font-medium">Update: ${updatedDate}</span>
@@ -180,7 +173,6 @@ function renderInsight(user, totalStars, languages = {}) {
     const { public_repos: totalRepos, followers, following } = user;
     const langEntries = Object.entries(languages).sort((a, b) => b[1] - a[1]);
     
-    // 1. Analisis Reputasi
     if (totalStars > 100 || followers > 50) {
         text += `🔥 <strong class="text-white">Sangat Berpengaruh!</strong> Developer ini memiliki reputasi elit di komunitas open-source dengan pencapaian <strong class="text-yellow-400">${totalStars} stars</strong>. `;
     } else if (totalStars > 20 || totalRepos > 30) {
@@ -191,7 +183,6 @@ function renderInsight(user, totalStars, languages = {}) {
         text += `🌱 <strong class="text-white">Memulai Perjalanan.</strong> Akun ini masih tergolong baru atau lebih sering mengelola *private repository*. `;
     }
 
-    // 2. Analisis Spesialisasi
     if (langEntries.length > 0) {
         const topLangName = langEntries[0][0];
         const topLangCount = langEntries[0][1];
@@ -208,7 +199,6 @@ function renderInsight(user, totalStars, languages = {}) {
         }
     }
 
-    // 3. Analisis Jaringan
     if (followers > (following * 2) && followers > 10) {
         text += `Rasio pengikutnya menandakan bahwa proyek atau kodenya sering dijadikan bahan rujukan oleh developer lain.`;
     } else if (following > 30 && following > followers) {
