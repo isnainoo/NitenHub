@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NitenHub - GitHub Profile Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nitenDark: '#111111',
+                        nitenRed: '#8B0000',
+                        nitenRedHover: '#660000'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-nitenDark min-h-screen flex flex-col justify-between selection:bg-nitenRed selection:text-white">
+
+    <header class="border-b border-gray-200 bg-white sticky top-0 z-50 backdrop-blur-md bg-white/80">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl font-bold tracking-tight text-nitenDark">Niten<span class="text-nitenRed">Hub</span></span>
+            </div>
+            <a href="https://github.com" target="_blank" class="text-xs font-medium text-gray-500 hover:text-nitenRed transition">Powered by GitHub API</a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-10 flex-grow w-full">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-nitenDark">
+                Menganalisis Profil GitHub <span class="text-nitenRed">Secara Otomatis</span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-600 mb-6">
+                Masukkan username GitHub untuk melihat statistik, bahasa pemrograman terpopuler, dan insight menarik dari developer.
+            </p>
+            
+            <form id="searchForm" class="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+                <input 
+                    type="text" 
+                    id="usernameInput" 
+                    placeholder="Masukkan username GitHub... (contoh: torvalds)" 
+                    required
+                    class="flex-grow px-4 py-2.5 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-nitenRed/20 border border-transparent focus:border-nitenRed/30 transition text-nitenDark"
+                >
+                <button 
+                    type="submit" 
+                    class="bg-nitenDark text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-nitenRed transition duration-300 shadow-sm"
+                >
+                    Analisis Profile
+                </button>
+            </form>
+        </div>
+
+        <div id="loading" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-nitenRed mb-2"></div>
+            <p class="text-xs text-gray-500 font-medium">Sedang meracik data dari GitHub...</p>
+        </div>
+
+        <div id="errorMessage" class="hidden max-w-md mx-auto bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-center text-sm mb-8"></div>
+
+        <div id="dashboardResult" class="hidden space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm flex flex-col items-center text-center justify-between">
+                    <div class="w-full">
+                        <img id="userAvatar" src="" alt="Avatar" class="w-24 h-24 rounded-2xl mx-auto border-2 border-nitenRed shadow-md object-cover mb-4">
+                        <h2 id="userName" class="text-xl font-bold text-nitenDark"></h2>
+                        <p id="userLogin" class="text-sm text-gray-500 mb-3"></p>
+                        <p id="userBio" class="text-xs text-gray-600 line-clamp-3 px-2"></p>
+                    </div>
+                    <div class="w-full pt-4 mt-4 border-t border-gray-100">
+                        <a id="userLink" href="" target="_blank" class="inline-flex items-center justify-center w-full bg-gray-50 hover:bg-nitenRed hover:text-white border border-gray-200 rounded-xl py-2 text-xs font-semibold text-nitenDark transition duration-300">
+                            Buka Profil GitHub
+                        </a>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Repository</span>
+                        <span id="statRepos" class="text-3xl font-extrabold text-nitenDark mt-2">0</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Stars</span>
+                        <span id="statStars" class="text-3xl font-extrabold text-nitenRed mt-2">0</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Followers</span>
+                        <span id="statFollowers" class="text-3xl font-extrabold text-nitenDark mt-2">0</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Following</span>
+                        <span id="statFollowing" class="text-3xl font-extrabold text-nitenDark mt-2">0</span>
+                    </div>
+                    
+                    <div class="col-span-2 sm:col-span-4 bg-nitenDark text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-2">Developer Insight</span>
+                            <p id="developerInsight" class="text-sm leading-relaxed text-gray-200 font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-sm font-bold text-nitenDark uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Bahasa Populer</h3>
+                    <div id="languageList" class="space-y-3.5">
+                        </div>
+                </div>
+
+                <div class="md:col-span-2 bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-sm font-bold text-nitenDark uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Repository yang Baru Diperbarui</h3>
+                    <div id="repoList" class="space-y-3">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="border-t border-gray-200 bg-white py-6">
+        <div class="max-w-6xl mx-auto px-4 text-center text-xs text-gray-500">
+            &copy; 2026 NitenHub. Dibuat dengan Golang & Tailwind CSS.
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
