@@ -115,19 +115,13 @@ function renderLanguages(languages = {}) {
                     <span class="text-nitenRed font-bold">${percentage}%</span>
                 </div>
                 <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
-                    <div class="bg-gradient-to-r from-nitenRedHover to-nitenRed h-full rounded-full" style="width: ${percentage}%;"></div>
+                    <div class="bg-nitenRed h-full rounded-full" style="width: ${percentage}%;"></div>
                 </div>
             </div>
         `;
     }).join('');
 
     DOM.languageList.innerHTML = htmlString;
-
-    setTimeout(() => {
-        DOM.languageList.querySelectorAll('[data-width]').forEach(el => {
-            el.style.width = el.getAttribute('data-width');
-        });
-    }, 100);
 }
 
 function renderRepos(repos = [], username = '') {
